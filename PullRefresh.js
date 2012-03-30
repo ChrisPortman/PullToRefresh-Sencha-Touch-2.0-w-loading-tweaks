@@ -293,7 +293,6 @@ Ext.define('Ext.plugin.PullRefresh', {
         var me = this,
             list = me.getList(),
             scroller = list.getScrollable().getScroller();
-				console.log([me,list,scroller])
         me.setViewState('loading');
         me.isReleased = false;
 
@@ -347,7 +346,6 @@ Ext.define('Ext.plugin.PullRefresh', {
                 case 'release':
                     messageEl.setHtml(me.getReleaseRefreshText());
                     loadingElement.addCls(prefix + 'list-pullrefresh-release');
-										console.log('release')
                 break;
 
                 case 'loading':
