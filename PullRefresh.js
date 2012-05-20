@@ -172,7 +172,8 @@ Ext.define('Ext.plugin.PullRefresh', {
         var store = this.getList().getStore(),
             proxy = store.getProxy(),
             operation;
-				
+
+
         operation = Ext.create('Ext.data.Operation', {
             page: 1,
             start: 0,
@@ -181,7 +182,7 @@ Ext.define('Ext.plugin.PullRefresh', {
             action: 'read',
             filters: store.getRemoteFilter() ? store.getFilters() : []
         });
-
+        
         proxy.read(operation, this.onLatestFetched, this);
     },
 
@@ -195,18 +196,24 @@ Ext.define('Ext.plugin.PullRefresh', {
     onLatestFetched: function(operation) {
         var store      = this.getList().getStore(),
             oldRecords = store.getData(),
+						old_length      = oldRecords.length,
             newRecords = operation.getRecords(),
             length     = newRecords.length,
-            toInsert   = [],
+            toInsert        = [],
+            newRecordIds    = [],
+            oldRecordsArr   = [],
+            toRemove        = [],
 						me = this,
 				    list = me.getList(),
 				    scroller = list.getScrollable().getScroller(),
             newRecord, oldRecord, i;
-
+		
         for (i = 0; i < length; i++) {
             newRecord = newRecords[i];
             oldRecord = oldRecords.getByKey(newRecord.getId());
-
+						
+						newRecordIds.push(newRecord.getId());
+            
             if (oldRecord) {
                 oldRecord.set(newRecord.getData());
             } else {
@@ -215,19 +222,36 @@ Ext.define('Ext.plugin.PullRefresh', {
 
             oldRecord = undefined;
         }
-        store.insert(0, toInsert);
+				store.insert(0, toInsert);
 
-				/* Scroller Actions moved from loadStore() */
+        // 				
+        oldRecordsArr = store.getRange();
+        for (i = 0; i < old_length; i++) {
+            oldRecord = oldRecordsArr[i];
+            newRecordIndex = newRecordIds.indexOf(oldRecord.getId());
+        
+
+            if (newRecordIndex == undefined || newRecordIndex == -1) {
+                toRemove.push(oldRecord);
+            }
+        
+            oldRecord = undefined;
+        }
+				store.remove(toRemove);
+				
+				
+				/* Scroller Actions moved from loadStore() */				
 				scroller.minPosition.y = 0;
 				scroller.scrollTo(null, 0, true);
 				me.resetRefreshState();
+	
     },
 
     onPainted: function() {
         this.pullHeight = this.loadingElement.getHeight();
     },
 
-    setMaxScroller: function(scroller, position) {
+    setMaxScroller: function(scroller, position) {	
         this.maxScroller = position;
     },
 
@@ -292,13 +316,15 @@ Ext.define('Ext.plugin.PullRefresh', {
     loadStore: function() {
         var me = this,
             list = me.getList(),
-            scroller = list.getScrollable().getScroller();
+            scroller = list.getScrollable().getScroller(),
+						store = this.getList().getStore();
+						
         me.setViewState('loading');
         me.isReleased = false;
-
+				
 				/* Check for custom refresh Fn() else run default */
 				if (me.getRefreshFn()) {
-            me.getRefreshFn().call(me, me);
+	           me.getRefreshFn().call(me, me);
         } else {
             me.fetchLatest();
         }
@@ -319,7 +345,7 @@ Ext.define('Ext.plugin.PullRefresh', {
 				// 			        scope: me
 				// 			    });
 				// 	scroller.minPosition.y = 0;
-				// 			    scroller.scrollTo(null, 0, true);
+				// 	scroller.scrollTo(null, 0, true);
 				// }, 500, me);
     },
 
@@ -360,7 +386,7 @@ Ext.define('Ext.plugin.PullRefresh', {
 
     resetRefreshState: function() {
         var me = this;
-
+				
         me.isRefreshing = false;
         me.lastUpdated = new Date();
 
