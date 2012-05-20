@@ -196,13 +196,9 @@ Ext.define('Ext.plugin.PullRefresh', {
     onLatestFetched: function(operation) {
         var store      = this.getList().getStore(),
             oldRecords = store.getData(),
-						old_length      = oldRecords.length,
             newRecords = operation.getRecords(),
             length     = newRecords.length,
-            toInsert        = [],
-            newRecordIds    = [],
-            oldRecordsArr   = [],
-            toRemove        = [],
+            toInsert   = [],
 						me = this,
 				    list = me.getList(),
 				    scroller = list.getScrollable().getScroller(),
@@ -211,9 +207,7 @@ Ext.define('Ext.plugin.PullRefresh', {
         for (i = 0; i < length; i++) {
             newRecord = newRecords[i];
             oldRecord = oldRecords.getByKey(newRecord.getId());
-						
-						newRecordIds.push(newRecord.getId());
-            
+						            
             if (oldRecord) {
                 oldRecord.set(newRecord.getData());
             } else {
@@ -224,21 +218,6 @@ Ext.define('Ext.plugin.PullRefresh', {
         }
 				store.insert(0, toInsert);
 
-        // 				
-        oldRecordsArr = store.getRange();
-        for (i = 0; i < old_length; i++) {
-            oldRecord = oldRecordsArr[i];
-            newRecordIndex = newRecordIds.indexOf(oldRecord.getId());
-        
-
-            if (newRecordIndex == undefined || newRecordIndex == -1) {
-                toRemove.push(oldRecord);
-            }
-        
-            oldRecord = undefined;
-        }
-				store.remove(toRemove);
-				
 				
 				/* Scroller Actions moved from loadStore() */				
 				scroller.minPosition.y = 0;
